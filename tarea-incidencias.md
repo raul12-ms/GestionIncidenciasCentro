@@ -161,3 +161,21 @@ Incluye en el `README.md`:
   fielmente; no inventes prompts para la documentación.
 - Los problemas encontrados, cómo los resolviste y las decisiones técnicas
   tomadas, incluyendo los motivos de esas decisiones.
+
+
+## Pruebas
+Admin: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkB0ZXN0LmNvbSIsImlzcyI6IkFwcC1NYXRyaWN1bGFzIiwiaWF0IjoxNzk1NDcyNTk1LCJleHAiOjE3OTU1NTg5OTUsInJvbGVzIjpbIlJPTEVfQURNSU4iXSwibm9tYnJlIjoiYWRtaW4ifQ.C2rk4gIRzlBn2M8cIc8HKJC9Y84fnLKNlpKYI5HcRS0
+
+Tecnico: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZWNuaWNvQHRlc3QuY29tIiwiaXNzIjoiQXBwLU1hdHJpY3VsYXMiLCJpYXQiOjE3OTU0NzI2MTAsImV4cCI6MTc5NTU1OTAxMCwicm9sZXMiOlsiUk9MRV9URUNOSUNPIl0sIm5vbWJyZSI6InRlY25pY28ifQ.hCco105DK7hlQuTmF-YbYhKy6AZjwnK-xreUzuKWl4Y
+
+User: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQHRlc3QuY29tIiwiaXNzIjoiQXBwLU1hdHJpY3VsYXMiLCJpYXQiOjE3OTU0NzI2MjIsImV4cCI6MTc5NTU1OTAyMiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sIm5vbWJyZSI6InVzZXIifQ.YcHqMwTZ2qACpRKTJxly0fywFie8kzxkAgMpdxQ5afQ
+
+
+{
+  "email": "prueba@test.com",
+  "password": "1234",
+  "nombre": "prueba",
+  "apellidos": "test",
+  "fechaNacimiento": "2005-01-09"
+}
+
