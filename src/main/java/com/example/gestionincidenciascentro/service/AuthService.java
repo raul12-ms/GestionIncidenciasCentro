@@ -4,7 +4,7 @@ package com.example.gestionincidenciascentro.service;
 import com.example.gestionincidenciascentro.DTO.UsuarioRequest;
 import com.example.gestionincidenciascentro.DTO.UsuarioResponse;
 import com.example.gestionincidenciascentro.entity.Usuario;
-import com.example.gestionincidenciascentro.exception.EmailRepetidoExpepcion;
+import com.example.gestionincidenciascentro.exception.EmailRepetidoException;
 import com.example.gestionincidenciascentro.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class AuthService {
 
         // Comprobar si el email ya está registrado en la base de datos (ignorando mayúsculas/minúsculas)
         if (usuarioRepository.findByEmailIgnoreCase(usuarioRequest.getEmail()).isPresent()) {
-            throw new EmailRepetidoExpepcion();
+            throw new EmailRepetidoException();
         }
 
         Usuario usuario = Usuario.builder()
@@ -38,6 +38,7 @@ public class AuthService {
                 .roles("ROLE_USER") // Asignar el rol de usuario por defecto
                 .activo(true)
                 .build();
+        // Guardar el usuario en la base de datos y devolver un DTO con la información del usuario registrado.
         usuarioRepository.saveAndFlush(usuario);
 
         return UsuarioResponse.builder()
@@ -45,6 +46,6 @@ public class AuthService {
                 .email(usuario.getEmail())
                 .nombre(usuario.getNombre())
                 .apellidos(usuario.getApellidos())
-                .build();
+                .build(); // rol?
     }
 }

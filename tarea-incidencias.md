@@ -163,12 +163,26 @@ Incluye en el `README.md`:
   tomadas, incluyendo los motivos de esas decisiones.
 
 
+## Si un administrador cambia el rol de un usuario mientras este conserva un JWT válido, ¿qué permisos tendrá ese usuario hasta que vuelva a iniciar sesión? ¿Por qué?
+_Ese usuario mantendra los permisos del rol con el que se genero el token hasta que inicie sesión de nuevo._
+
+_Conserva los permisos antiguos hasta que inicie sesión de nuevo o caduque el token (24 h), momento en que tendrá que hacer login. La API es stateless: los roles se copian en el token al hacer login, y en cada petición JwtAuthenticationConverter los lee del claim roles, sin consultar la BD. El token no se puede modificar porque está firmado. El riesgo mayor es al quitar permisos: un ADMIN degradado sigue siendo ADMIN hasta 24 h._
+
+## Investiga y compara posibles soluciones para que el cambio de permisos se aplique de forma inmediata sin obligar al usuario a volver a iniciar sesión. Explica las ventajas y los inconvenientes de cada alternativa y propón cuál utilizarías.
+
+_Leer los roles de la BD en cada petición	Sencilla; también detecta usuarios desactivados	Una consulta por petición; se pierde parte de lo stateless	Inmediata -> Sí_
+
+_El token solo identificaría al usuario (sub), y sus roles se leerían de la BD en cada petición. Es la más sencilla, es inmediata en ambos sentidos (dar y quitar permisos) y, para un centro educativo, una consulta por petición es asumible. Con mucho tráfico añadiría una caché, que habría que vaciar al cambiar un rol._
+
+
 ## Pruebas
-Admin: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkB0ZXN0LmNvbSIsImlzcyI6IkFwcC1NYXRyaWN1bGFzIiwiaWF0IjoxNzk1NDcyNTk1LCJleHAiOjE3OTU1NTg5OTUsInJvbGVzIjpbIlJPTEVfQURNSU4iXSwibm9tYnJlIjoiYWRtaW4ifQ.C2rk4gIRzlBn2M8cIc8HKJC9Y84fnLKNlpKYI5HcRS0
+Admin: 
 
-Tecnico: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZWNuaWNvQHRlc3QuY29tIiwiaXNzIjoiQXBwLU1hdHJpY3VsYXMiLCJpYXQiOjE3OTU0NzI2MTAsImV4cCI6MTc5NTU1OTAxMCwicm9sZXMiOlsiUk9MRV9URUNOSUNPIl0sIm5vbWJyZSI6InRlY25pY28ifQ.hCco105DK7hlQuTmF-YbYhKy6AZjwnK-xreUzuKWl4Y
+Tecnico: 
 
-User: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQHRlc3QuY29tIiwiaXNzIjoiQXBwLU1hdHJpY3VsYXMiLCJpYXQiOjE3OTU0NzI2MjIsImV4cCI6MTc5NTU1OTAyMiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sIm5vbWJyZSI6InVzZXIifQ.YcHqMwTZ2qACpRKTJxly0fywFie8kzxkAgMpdxQ5afQ
+User: 
+
+Prueba: 
 
 
 {
@@ -179,3 +193,21 @@ User: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQHRlc3QuY29tIiwiaXNzIjoiQXBwLU1hdHJpY
   "fechaNacimiento": "2005-01-09"
 }
 
+
+
+## Para pensar (Borrar esto luego)
+1. ¿Filtro o proxy?
+
+/usuarios → un filtro. La regla .requestMatchers("/usuarios/**").hasRole("ADMIN") la evalúa el AuthorizationFilter, antes de llegar al DispatcherServlet. UsuarioController no tiene @PreAuthorize, así que no hay otra barrera.
+
+PATCH de estado → también el filtro, porque va primero:
+
+Petición → BearerTokenAuthenticationFilter (¿token válido? si no, 401)
+         → AuthorizationFilter (requestMatchers)   ← el USER se queda aquí: 403
+         → DispatcherServlet → lee el JSON y aplica @Valid
+         → proxy de @PreAuthorize                  ← no llega
+         → método del controlador
+
+El @PreAuthorize es la segunda barrera: actuaría si alguien borrara la regla del filtro. En ambos casos se lanza AccessDeniedException y el ExceptionTranslationFilter la convierte en 403.
+
+Detalle de examen: el proxy actúa después de leer el body. Si solo tuvieras @PreAuthorize, un USER con un JSON inválido recibiría 400; con el filtro recibe 403.

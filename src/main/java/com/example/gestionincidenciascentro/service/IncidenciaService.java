@@ -44,20 +44,27 @@ public class IncidenciaService {
     }
 
     // LISTADO: TECNICO/ADMIN > todas; USER > solo las suyas (filtra MySQL con Query, no con for/if)
-    public List<Incidencia> findAll(Authentication authentication) {
+    public List<IncidenciaResponse> findAll(Authentication authentication) {
         if (puedeVerTodas(authentication)) {
-            return incidenciaRepository.findAll();
+            return incidenciaRepository.findAll().stream()
+                    .map(this::toResponse)
+                    .toList();
         }
-        return incidenciaRepository.findByAutorEmail(authentication.getName());
+        return incidenciaRepository.findByAutorEmail(authentication.getName()).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     // UNA INCIDENCIA: TECNICO/ADMIN > cualquiera; USER > solo si el autor es él
-    public Optional<Incidencia> findById(Long id, Authentication authentication) {
+    public Optional<IncidenciaResponse> findById(Long id, Authentication authentication) {
         if (puedeVerTodas(authentication)) {
-            return incidenciaRepository.findById(id);
+            return incidenciaRepository.findById(id).map(incidencia -> {
+                return toResponse(incidencia);  // this::toResponse
+            });
         }
-        return incidenciaRepository.findByIdAndAutorEmail(id, authentication.getName());
+        return incidenciaRepository.findByIdAndAutorEmail(id, authentication.getName()).map(this::toResponse);
     }
+
 
     /*
      * Se recibe el email del usuario autenticado (el "sub" del JWT) y se asocia.
@@ -81,8 +88,17 @@ public class IncidenciaService {
 
     }
 
+    // PATCH: cambiar estado de una incidencia. Solo TECNICO/ADMIN pueden cambiar el estado.
+    public Optional<IncidenciaResponse> modifyEstado(Long id, Incidencia.Estado nuevoEstado) {
+        return incidenciaRepository.findById(id).map(incidencia -> {
+            incidencia.setEstado(nuevoEstado);
+            Incidencia editada = incidenciaRepository.save(incidencia);
+            return toResponse(editada);
+        });
+    }
 
-    // Entidad → DTO. Es privado porque solo lo usa este servicio; lo reutilizarás en los GET y en cambiar estado.
+
+    // Entidad > DTO. Es privado porque solo lo usa este servicio; lo reutilizarás en los GET y en cambiar estado.
     private IncidenciaResponse toResponse(Incidencia incidencia) {
         return IncidenciaResponse.builder()
                 .id(incidencia.getId())
@@ -94,7 +110,6 @@ public class IncidenciaService {
                 .autorNombre(incidencia.getAutor().getNombre())
                 .build();
     }
-
 
 
     // BORRAR: ADMIN > cualquiera. Solo el ADMIN puede borrar incidencias

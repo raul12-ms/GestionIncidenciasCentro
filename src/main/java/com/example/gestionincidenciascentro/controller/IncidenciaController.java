@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -29,7 +30,7 @@ public class IncidenciaController {
     // GET: http://localhost:8080/incidencias -> devuelve todas las incidencias en la BD según el rol del usuario autenticado
     @PreAuthorize("hasAnyRole('USER','TECNICO','ADMIN')")
     @GetMapping("/incidencias")
-    public List<Incidencia> findAll(Authentication authentication) {
+    public List<IncidenciaResponse> findAll(Authentication authentication) {
         return incidenciaService.findAll(authentication); // Devuelve 200 OK con la lista de incidencias
 
     }
@@ -37,10 +38,12 @@ public class IncidenciaController {
     // GET: http://localhost:8080/incidencias/{id} -> devuelve la incidencia con el id especificado según el rol del usuario autenticado
     @PreAuthorize("hasAnyRole('USER','TECNICO','ADMIN')")
     @GetMapping("/incidencias/{id}")
-    public ResponseEntity<Incidencia> findById(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<IncidenciaResponse> findById(@PathVariable Long id, Authentication authentication) {
         return incidenciaService.findById(id, authentication)
                 .map(ResponseEntity::ok) // Devuelve 200 OK con la incidencia si se encuentra y el usuario tiene permiso
                 .orElse(ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra la incidencia
+        // "Devuelvo 404 porque, con 403, un usuario podría averiguar qué incidencias existen probando ids.
+        // Busco por id y email del autor en la misma consulta, y el email sale del token, así que no puede falsificarlo."
     }
 
     // Spring inyecta el Authentication del usuario que hace la petición.
@@ -48,12 +51,22 @@ public class IncidenciaController {
     // POST: http://localhost:8080/incidencias -> crea una nueva incidencia según el rol del usuario autenticado
     @PreAuthorize("hasAnyRole('USER','TECNICO','ADMIN')")
     @PostMapping("/incidencias") // @Valid se encarga de validar los campos del DTO IncidenciaRequest según las anotaciones de validación (@NotBlank, @Size, etc.)
-    public ResponseEntity<IncidenciaResponse> create(@Valid @RequestBody IncidenciaRequest incidenciaRequest, Authentication authentication) {
+    public ResponseEntity<IncidenciaResponse> create(@Valid @RequestBody IncidenciaRequest incidenciaRequest,
+                                                     Authentication authentication) {
 
         // Al crear una incidencia, obtener el autor (email) a partir de la autenticación
         return incidenciaService.create(incidenciaRequest, authentication.getName())
                 .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(saved)) // Devuelve 201 Created con la incidencia creada
                 .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si el autor no existe
+    }
+
+    // PATCH: http://localhost:8080/incidencias/{id}/estado -> cambia el estado de la incidencia con el id especificado.
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')") // Solo ADMIN y TECNICO pueden cambiar el estado de una incidencia
+    @PatchMapping("/incidencias/{id}/estado")   // @Valid
+    public ResponseEntity<IncidenciaResponse> modifyEstado(@PathVariable Long id, @RequestBody Incidencia.Estado estado) {
+        return incidenciaService.modifyEstado(id, estado)
+                .map(ResponseEntity::ok) // Devuelve 200 OK con la incidencia modificada
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra la incidencia
     }
 
     // DELETE: http://localhost:8080/incidencias/{id} -> borra la incidencia con el id especificado. Solo ADMIN puede borrar incidencias.

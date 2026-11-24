@@ -3,6 +3,8 @@ package com.example.gestionincidenciascentro.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -31,6 +33,9 @@ public class Usuario implements UserDetails {
     private String apellidos;
     @JsonIgnore // Nunca devolver el hash de la contraseña en una respuesta JSON
     private String password;
+    @NotBlank(message = "El rol es obligatorio")
+    @Pattern(regexp = "USER|TECNICO|ADMIN", message = "Rol no admitido")
+    private String rol;
     private String roles;
     private LocalDate fechaNacimiento;
     private Boolean activo; // para controlar si el usuario está activo o no (p. ej. para bloquearlo sin borrarlo de la BD)

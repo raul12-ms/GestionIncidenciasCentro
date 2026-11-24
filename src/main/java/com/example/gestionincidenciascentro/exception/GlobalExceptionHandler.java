@@ -12,10 +12,17 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(EmailRepetidoExpepcion.class)
-    public ResponseEntity<Map<String, String>> handleEmailRepetido(EmailRepetidoExpepcion exception) {
+    @ExceptionHandler(EmailRepetidoException.class)
+    public ResponseEntity<Map<String, String>> handleEmailRepetido(EmailRepetidoException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", exception.getMessage()));
         // Devuelve 409 Conflict con un mensaje de error en el cuerpo de la respuesta
+    }
+
+    // Excepción personalizada para indicar que un rol no es válido
+    @ExceptionHandler(RolNoValidoException.class)
+    public ResponseEntity<Map<String, String>> handleRolNoValido(RolNoValidoException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        // 400 Bad Request con un mensaje de error en el cuerpo de la respuesta
     }
 
 

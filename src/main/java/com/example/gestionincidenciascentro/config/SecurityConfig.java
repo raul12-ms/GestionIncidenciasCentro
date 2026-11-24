@@ -50,7 +50,7 @@ public class SecurityConfig {
                     .requestMatchers("/error").permitAll()   // para ver errores reales (practica común)
                     .requestMatchers("/usuarios/**").hasRole("ADMIN")  // Solo ADMIN puede acceder a /usuarios/**
                     .requestMatchers(HttpMethod.DELETE, "/incidencias/**").hasRole("ADMIN")  // específica: ANTES que la general
-                    .requestMatchers(HttpMethod.PUT, "/incidencias/**").hasAnyRole("TECNICO", "ADMIN")
+                    .requestMatchers(HttpMethod.PATCH, "/incidencias/**").hasAnyRole("TECNICO", "ADMIN")
                     //.requestMatchers("/usuarios/miperfil").authenticated()  // Cualquier usuario autenticado puede acceder a su perfil
                     //.requestMatchers(HttpMethod.DELETE,"/usuarios/{usuarioId}/detalle-usuario").hasAnyRole("ADMIN", "DIRECTOR","JEFATURA","SECRETARIA") // Solo ADMIN, DIRECTOR, JEFATURA y SECRETARIA pueden eliminar detalle de usuario
                     .anyRequest().authenticated()  // Todas las demás rutas requieren autenticación (siempre la última)
@@ -94,7 +94,7 @@ public class SecurityConfig {
         return jwtConverter;
     }
 
-    @Bean
+@Bean
     public PasswordEncoder passwordEncoder() {
         // BCrypt para cifrar contraseñas en la base de datos
         return new BCryptPasswordEncoder();
